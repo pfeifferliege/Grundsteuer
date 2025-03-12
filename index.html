@@ -1,0 +1,177 @@
+<!DOCTYPE html>  <html lang="de">  
+<head>  
+    <meta charset="UTF-8">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+    <title>Grundsteuer B Rechner</title>  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>  
+    <style>  
+        * {  
+            box-sizing: border-box;  
+            margin: 0;  
+            padding: 0;  
+        }  
+        body {
+    font-family: Arial, sans-serif;
+    background-color: rgba(0, 128, 0, 0.3); /* Leicht transparenter grüner Hintergrund */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    background: transparent; /* Komplett transparenter Hintergrund */
+    max-width: 400px;
+    width: 100%;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    text-align: center;
+        }  
+        h2 {  
+            color: #333;  
+            margin-bottom: 20px;  
+        }  
+        label {  
+            display: block;  
+            text-align: left;  
+            margin: 10px 0 5px;  
+            font-weight: bold;  
+            color: #555;  
+        }  
+        input {  
+            width: 100%;  
+            padding: 10px;  
+            border: 1px solid #ccc;  
+            border-radius: 6px;  
+            font-size: 16px;  
+        }  
+        button {  
+            width: 100%;  
+            padding: 12px;  
+            border: none;  
+            border-radius: 6px;  
+            font-size: 16px;  
+            cursor: pointer;  
+            transition: background 0.3s ease, transform 0.2s ease;  
+            margin-top: 10px;  
+        }  
+        .calculate-btn {  
+            background-color: #007bff;  
+            color: white;  
+        }  
+        .calculate-btn:hover {  
+            background-color: #0056b3;  
+            transform: scale(1.05);  
+        }  
+        .pdf-btn {  
+            background-color: #28a745;  
+            color: white;  
+        }  
+        .pdf-btn:hover {  
+            background-color: #218838;  
+            transform: scale(1.05);  
+        }  
+        .reset-btn {  
+            background-color: #dc3545;  
+            color: white;  
+        }  
+        .reset-btn:hover {  
+            background-color: #c82333;  
+            transform: scale(1.05);  
+        }  
+        #ergebnis {  
+            background: #e9ecef;  
+            padding: 16px;  
+            border-radius: 6px;  
+            margin-top: 15px;  
+            font-size: 22px;  
+            font-weight: bold;  
+            color: #333;  
+            line-height: 1.5;  
+        }  
+    </style>  
+</head>  
+<body>  
+    <div class="container">  
+        <h2>Grundsteuer B Rechner</h2>  
+        <label for="einheitswert">Einheitswert (€):</label>  
+        <input type="number" id="einheitswert" placeholder="z. B. 50000" required>  <label for="steuermesszahl">Steuermesszahl (%):</label>  
+    <input type="number" id="steuermesszahl" placeholder="z. B. 3.5" step="0.001" required>  
+      
+    <label for="hebesatz">Hebesatz (v.H.):</label>  
+    <input type="number" id="hebesatz" placeholder="z. B. 577" required>  
+      
+    <button class="calculate-btn" onclick="berechneGrundsteuer()">Berechnen</button>  
+      
+    <p id="ergebnis">Grundsteuer: - €</p>  
+      
+    <button class="pdf-btn" onclick="generatePDF()">Als PDF speichern</button>  
+    <button class="reset-btn" onclick="resetForm()">Daten löschen</button>  
+</div>  
+
+<script>  
+    function berechneGrundsteuer() {  
+        let einheitswert = parseFloat(document.getElementById("einheitswert").value);  
+        let steuermesszahl = parseFloat(document.getElementById("steuermesszahl").value);  
+        let hebesatz = parseFloat(document.getElementById("hebesatz").value);  
+
+        if (!Number.isFinite(einheitswert) || !Number.isFinite(steuermesszahl) || !Number.isFinite(hebesatz) ||  
+            einheitswert <= 0 || steuermesszahl <= 0 || hebesatz <= 0) {  
+            document.getElementById("ergebnis").innerText = "Bitte geben Sie gültige Werte ein.";  
+            return;  
+        }  
+
+        let steuermessbetrag = (einheitswert * steuermesszahl) / 1000;  
+        let grundsteuer = steuermessbetrag * (hebesatz / 100);  
+
+        document.getElementById("ergebnis").innerText =   
+            "Grundsteuer: " + grundsteuer.toLocaleString("de-DE", { style: "currency", currency: "EUR" });  
+    }  
+
+    function generatePDF() {  
+        const { jsPDF } = window.jspdf;  
+        let doc = new jsPDF();  
+        let ergebnis = document.getElementById("ergebnis").innerText;  
+        let einheitswert = document.getElementById("einheitswert").value;  
+        let steuermesszahl = document.getElementById("steuermesszahl").value;  
+        let hebesatz = document.getElementById("hebesatz").value;  
+
+        if (ergebnis.includes("- €") || ergebnis === "Bitte geben Sie gültige Werte ein.") {  
+            alert("Bitte berechnen Sie zuerst die Grundsteuer.");  
+            return;  
+        }  
+
+        doc.setFontSize(18);  
+        doc.text("Voraussichtliche Berechnung der Grundsteuer B", 10, 15);  
+
+        doc.setFontSize(10);  
+        doc.text("Bei den eingegebenen Werten handelt es sich um Werte, die vom jeweiligen Finanzamt", 10, 25);  
+        doc.text("vorgegeben sind und in Ihrem zugesandten Bescheid festgesetzt sind.", 10, 30);  
+        doc.text("Der Hebesatz ist von der jeweiligen Stadt/Gemeinde festgesetzt worden.", 10, 35);  
+
+        doc.setFontSize(14);  
+        doc.text("Eingabewerte:", 10, 50);  
+        doc.text("Einheitswert: " + einheitswert + " €", 10, 60);  
+        doc.text("Steuermesszahl: " + steuermesszahl + " %", 10, 70);  
+        doc.text("Hebesatz: " + hebesatz + " v.H.", 10, 80);  
+
+        doc.setFontSize(14);  
+        doc.text("Ergebnis:", 10, 100);  
+        doc.setFontSize(16);  
+        doc.text(ergebnis, 10, 110);  
+
+        doc.save("Grundsteuer_Berechnung.pdf");  
+    }  
+
+    function resetForm() {  
+        document.getElementById("einheitswert").value = "";  
+        document.getElementById("steuermesszahl").value = "";  
+        document.getElementById("hebesatz").value = "";  
+        document.getElementById("ergebnis").innerText = "Grundsteuer: - €";  
+    }  
+</script>
+
+</body>  
+</html>  
